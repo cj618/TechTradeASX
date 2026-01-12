@@ -1,6 +1,6 @@
 # TECHTRADE ASX
 
-# This Perl-based tool analyzes ASX stock data to identify trading ranges and generate buy/sell signals.
+# This Perl-based tool analyzes ASX market data to identify trading ranges and generate buy/sell signals.
 
 ## Features
 - Downloads daily price data from Alpha Vantage
@@ -14,11 +14,11 @@
 
 2. Get a free API key from [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
 
-3. Edit `asx_range_trader.pl` and insert your API key.
+3. Edit `tt.pl` and insert your API key.
 
 4. Run the script:
    ```bash
-   perl asx_range_trader.pl
+   perl tt.pl
    ```
 
 5. Output will be saved in `output/signals.csv`
