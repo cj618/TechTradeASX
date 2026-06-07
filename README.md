@@ -13,12 +13,17 @@ This is an experimental trading research tool. It is not financial advice, and i
 - Writes results to `output/signals.csv`
 - Keeps the main script small by using reusable modules under `lib/TechTradeASX/`
 - Includes initial regression tests under `t/`
+- Provides a SQLite datastore for symbols, daily prices and backtest result tables
+- Provides a basic position sizing helper for risk-based trade sizing
 
 ## Requirements
 
 Perl 5 with the following modules:
 
+- DBI
+- DBD::SQLite
 - File::Path
+- File::Temp, for the datastore test
 - JSON
 - List::Util
 - LWP::UserAgent
@@ -48,6 +53,27 @@ The output will be written to:
 output/signals.csv
 ```
 
+## Local database
+
+Initialise the local SQLite database with:
+
+```sh
+perl tools/initdb
+```
+
+By default this creates:
+
+```text
+var/techtrade.db
+```
+
+To use a different database path:
+
+```sh
+export TECHTRADE_DB="var/other.db"
+perl tools/initdb
+```
+
 ## Running tests
 
 Run the initial test suite with:
@@ -56,7 +82,7 @@ Run the initial test suite with:
 prove -l t
 ```
 
-The tests currently cover symbol parsing and the baseline range signal logic.
+The tests currently cover symbol parsing, the baseline range signal logic and the SQLite datastore.
 
 ## Symbols
 
@@ -85,6 +111,7 @@ export TECHTRADE_SYMBOL_FILE="data/symbols.txt"
 export TECHTRADE_OUTPUT_FILE="output/signals.csv"
 export TECHTRADE_THRESHOLD_PCT="5"
 export TECHTRADE_DAYS="90"
+export TECHTRADE_DB="var/techtrade.db"
 ```
 
 ## Current module layout
@@ -93,9 +120,14 @@ export TECHTRADE_DAYS="90"
 TT.pl
 lib/TechTradeASX/Symbols.pm
 lib/TechTradeASX/DataProvider/AlphaVantage.pm
+lib/TechTradeASX/DataStore/SQLite.pm
 lib/TechTradeASX/Range.pm
+lib/TechTradeASX/Risk.pm
+lib/TechTradeASX/Util/Stats.pm
 t/001_symbols.t
 t/002_range.t
+t/003_datastore.t
+tools/initdb
 ```
 
 `TT.pl` remains the command-line entry point. The reusable code now lives in modules so the project can grow into a more serious research platform without turning the script into an unmaintainable pile.
@@ -104,25 +136,18 @@ t/002_range.t
 
 The current strategy is intentionally simple. A stock being near a 90-day low is not automatically a good buying opportunity. It may be a falling knife.
 
-Future versions should include trend filters, volatility filters, liquidity checks, brokerage, slippage, backtesting, paper trading and position sizing.
+The datastore and risk modules are foundations for backtesting, but the project does not yet include a complete portfolio backtester, market-regime filter, reporting engine or paper-trading loop.
 
 ## Development direction
 
-Suggested next modules:
+The next major development target is the backtesting layer:
 
 ```text
-lib/TechTradeASX/Indicators.pm
+lib/TechTradeASX/Backtest.pm
 lib/TechTradeASX/Strategy/RangeReversion.pm
-lib/TechTradeASX/Risk.pm
 lib/TechTradeASX/Report/CSV.pm
-lib/TechTradeASX/DataStore/SQLite.pm
+script/fetch-history.pl
+script/backtest.pl
 ```
 
-Suggested next tests:
-
-```text
-t/003_indicators.t
-t/004_alpha_vantage_parse.t
-t/005_risk.t
-t/006_csv_report.t
-```
+The backtester should use the SQLite price cache, apply brokerage and slippage, record trades into the datastore, and compare results against a benchmark such as STW.AX or IOZ.AX.
